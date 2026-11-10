@@ -24,6 +24,7 @@ Create mockups without letting a generative image model redraw the user's artwor
 11. Do not declare the task complete until the finished mockup image itself is visible or attached in the user-facing response. A console message, file path, QA report, or “done” message alone is not delivery.
 12. Success requires all three gates: **Render PASS → Fidelity QA PASS → Delivery PASS**.
 13. Treat border lines, side stripes, trim-adjacent color bands, keylines, and any artwork element close to the cut edge as **content-layer elements**. They must remain visible after mockup unless they are physically occluded by the substrate or explicitly cropped with user authorization.
+14. Before any image generation or image editing begins, establish whether the output is **proposal-use**. If the user has not already explicitly said yes/no, ask exactly one proposal-use question and wait for the answer. Never generate the image before this decision is known.
 
 ## Inputs
 
@@ -35,6 +36,7 @@ Accept:
   2. user text description;
   3. automatic detection.
 - Optional fidelity mode: `general` or `high`.
+- Proposal-use decision: `yes` or `no`. This is required before image generation; infer it only when the user explicitly states the output is for a proposal/presentation or explicitly says it is not.
 
 Do not require connectors. Do not require Photoshop, Illustrator, Blender, or other local software.
 
@@ -104,6 +106,58 @@ Choose one:
 
 Never include the locked artwork in a generative image-editing prompt. Generate or clean the **substrate first**, then composite the original artwork afterward.
 
+## Proposal-use gate — mandatory before image generation
+
+Before generating or editing any image, establish whether the output needs a proposal presentation layout.
+
+If the user has **not** already answered this in the same request or prior conversation context, ask exactly:
+
+`這張 Mockup 是否需要做成提案版？（需要／不需要）`
+
+Rules:
+1. Ask this before image generation, image editing, substrate generation, or final mockup rendering.
+2. Wait for the answer. Do not begin image generation while the proposal-use decision is unresolved.
+3. If the user already explicitly says `提案用`, `簡報用`, `proposal`, or equivalent, treat it as `yes` and do not ask again.
+4. If the user explicitly says `不用提案`, `只要 mockup`, or equivalent, treat it as `no` and do not ask again.
+5. Record the decision in preflight as `Proposal mode: yes/no`.
+
+### Proposal mode = yes
+
+Read `references/proposal-mode.md`.
+
+Produce a **presentation-ready composite** whose main mockup remains dominant and whose bottom area contains a separate proposal information band inspired by the provided reference layout.
+
+Use three columns:
+
+1. **設計概念**
+   - 2–4 short lines explaining the visible design rationale.
+   - Ground the copy in the supplied artwork, user brief, and observable brand cues.
+   - Do not invent business strategy, brand history, or symbolism that the user did not provide or that is not visually supportable.
+
+2. **品牌元素**
+   - Show the original brand mark or exact source-derived visual element.
+   - Optionally show a deterministic/extracted motif or color/shape relationship.
+   - Do not alter the locked artwork used on the mockup.
+   - If a new motif would require invention, use existing shapes/colors instead of fabricating a new logo concept.
+
+3. **材質建議**
+   - Name the recommended material/stock/finish.
+   - Include a practical specification when appropriate, e.g. `象牙紙（260–300gsm）`.
+   - Add one concise tactile/production rationale.
+   - Use `references/material-presets.md` for substrate logic.
+
+Layout rules:
+- Put the proposal band **below** the main mockup, not on top of the product artwork.
+- Keep generous spacing, clear dividers, and presentation-grade typography.
+- Keep the main mockup visually larger than the proposal band.
+- Do not let the proposal band crop, cover, or visually compete with the locked artwork.
+- The bottom band may use neutral background panels, source-derived brand colors, small swatches, and material samples.
+- Treat proposal copy as presentation content, not part of the locked artwork.
+
+### Proposal mode = no
+
+Deliver the normal mockup without the proposal information band.
+
 ## Preflight: always report settings before execution
 
 Before modifying or generating any image, show a compact configuration summary. Use this structure:
@@ -117,6 +171,7 @@ Before modifying or generating any image, show a compact configuration summary. 
 - Placement source: `[selection / description / auto-detected + confidence]`
 - Fit: `[contain / cover]`
 - Edge-adjacent content: `[none detected / detected: preserve full visibility / detected but physically occluded]`
+- Proposal mode: `[yes / no]`
 - Naturalization: presentation layer only
 - Artwork redraw: prohibited
 - Fidelity: `[general / high]`
@@ -161,28 +216,38 @@ Interpret these as `general`: 一般, 快速, 概念稿, preview.
 
 ## Core workflow
 
-1. Inspect inputs and determine rendering mode.
-2. Determine placement using the priority rules.
-3. Inspect the artwork for edge-adjacent content and set an edge-preservation strategy.
-4. Emit the preflight summary.
-5. Apply conditional-confirmation rules.
-6. Prepare a blank/clean substrate.
+1. Inspect inputs and determine whether proposal-use is already explicit.
+2. If proposal-use is unresolved, ask the mandatory proposal-use question and wait for the answer.
+3. Determine rendering mode.
+4. Determine placement using the priority rules.
+5. Inspect the artwork for edge-adjacent content and set an edge-preservation strategy.
+6. If proposal mode is `yes`, read `references/proposal-mode.md` and prepare grounded proposal copy/visual elements before rendering.
+7. Emit the preflight summary, including `Proposal mode`.
+8. Apply conditional-confirmation rules.
+9. Prepare a blank/clean substrate.
    - For Mode 2A, use image editing only to remove the existing design from the target area.
    - If an edit changes unrelated areas materially, reject it and retry.
-7. Composite the locked artwork using deterministic processing.
+10. Composite the locked artwork using deterministic processing.
    - Prefer `scripts/render_mockup.py`.
    - Use `contain` by default.
    - Use `cover` only with explicit user authorization.
    - Use only presentation-layer luminance modulation for material integration.
-8. Run `scripts/verify_mockup.py`.
-9. Perform final visual inspection of the rendered mockup.
-10. If verification fails, retry within the fidelity-mode budget.
-11. If still failing, stop and report:
+11. Run `scripts/verify_mockup.py`.
+12. Perform final visual inspection of the rendered mockup.
+13. If verification fails, retry within the fidelity-mode budget.
+14. If proposal mode is `yes`, compose the bottom proposal information band **after** the core mockup passes fidelity QA. Do not modify the locked artwork layer while adding the presentation band.
+15. Verify proposal layout:
+   - all three sections are present;
+   - copy is grounded in source/user information;
+   - brand visuals are source-derived;
+   - material recommendation is plausible;
+   - band does not cover or crop the mockup.
+16. If verification still fails, stop and report:
     - failed check;
     - probable cause;
     - recommended fix or fallback.
-12. Run the **Delivery Gate** below.
-13. Deliver only a passing result, or clearly label a non-passing result as failed instead of presenting it as successful.
+17. Run the **Delivery Gate** below.
+18. Deliver only a passing result, or clearly label a non-passing result as failed instead of presenting it as successful.
 
 ## Delivery Gate — mandatory
 
@@ -287,7 +352,8 @@ Treat every discovered mockup defect as a reusable regression case, not only as 
 
 Read:
 - `references/failure-taxonomy.md` when a render, QA step, fallback, or delivery fails.
-- `references/regression-tests.md` after changing rendering, material, QA, fallback, edge-preservation, or delivery behavior.
+- `references/regression-tests.md` after changing rendering, material, QA, fallback, edge-preservation, proposal-mode, or delivery behavior.
+- `references/proposal-mode.md` whenever proposal mode is enabled or its presentation rules change.
 
 Rules:
 1. Assign at least one failure code to every meaningful failure.
