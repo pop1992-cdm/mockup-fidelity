@@ -74,8 +74,9 @@ Default severity: S0 for FLW-01/04/06; S1 for FLW-02/03/05.
 - `PRP-04 brand-element-invented` — proposal panel redraws/replaces the source brand mark or invents a new brand element without authorization.
 - `PRP-05 proposal-layout-obscures-mockup` — proposal band covers/crops/competes with the mockup instead of sitting beneath it.
 - `PRP-06 material-recommendation-missing` — proposal mode lacks a practical material/stock/finish recommendation.
+- `PRP-07 stale-output-mode` — a new mockup job reuses the proposal/pure-mockup choice from a previous job instead of resetting to `UNRESOLVED`.
 
-Default severity: S0 for PRP-01; S1 for PRP-02/03/04/05/06.
+Default severity: S0 for PRP-01/07; S1 for PRP-02/03/04/05/06.
 
 ### DELIVERY
 - `DLV-01 image-not-surfaced` — render exists but user cannot see/access final image.
