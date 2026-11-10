@@ -173,3 +173,15 @@ Expected:
 - do not ask the proposal-use question again;
 - infer `Proposal mode: yes` from the explicit request;
 - include the proposal band after the mockup passes QA.
+
+## 16. Per-job proposal choice must reset
+Conversation flow:
+1. First request: 「請做這張名片 mockup。」 → user chooses `A. 提案板`.
+2. After completion, user sends a different artwork and says: 「再幫我 mockup 這張。」
+
+Expected for the second request:
+- do not reuse the previous `A` choice;
+- reset to `Output mode: UNRESOLVED`;
+- first response contains only:
+  `這次 Mockup 要做哪一種？ A. 提案板（Mockup + 下方提案資訊） B. 純 Mockup`
+- no preflight, image generation, image editing, substrate generation, or rendering before the user answers.
