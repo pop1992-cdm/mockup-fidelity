@@ -4,8 +4,8 @@ from __future__ import annotations
 import argparse, json
 from pathlib import Path
 
-P0 = {"R01","R02","R03","R04","R05","R06","R07","R10","R12","R15","R16"}
-ALL = [f"R{i:02d}" for i in range(1,17)]
+P0 = {"R01","R02","R03","R04","R05","R06","R07","R10","R12","R15","R16","R17","R18"}
+ALL = [f"R{i:02d}" for i in range(1,20)]
 VALID = {"PASS","FAIL","BLOCKED","NOT_RUN"}
 
 def init_report():
