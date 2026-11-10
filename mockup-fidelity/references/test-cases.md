@@ -122,3 +122,54 @@ Expected:
 - the left white stripe remains visible on the front face of the English card;
 - the stripe is not replaced by only the exposed paper thickness;
 - if the chosen composition/angle hides the stripe, the render must fail edge-preservation QA and retry or report failure.
+
+## 12. Mandatory proposal-use question
+Files: any valid artwork and a mockup request.
+
+Prompt:
+「請幫我做這張名片 mockup。」
+
+Expected:
+- before any image generation/editing, ask exactly:
+  `這張 Mockup 是否需要做成提案版？（需要／不需要）`
+- do not generate until the user answers;
+- preflight records `Proposal mode: yes/no`.
+
+## 13. Proposal board output
+Files: business-card artwork or packaging artwork.
+
+Prompt flow:
+1. 「請幫我做這張名片 mockup。」
+2. User answers: 「需要提案版。」
+
+Expected:
+- normal fidelity workflow runs first;
+- passing mockup remains the dominant upper/main image;
+- a separate bottom proposal band is added afterward;
+- the band has exactly three sections:
+  - 設計概念
+  - 品牌元素
+  - 材質建議
+- design concept is grounded in user brief/visible cues;
+- brand visuals are source-derived and do not redraw the locked logo;
+- material recommendation includes practical stock/finish guidance;
+- panel does not cover or crop the mockup.
+
+## 14. No proposal board when declined
+Prompt flow:
+1. 「請幫我做這張包裝 mockup。」
+2. User answers: 「不需要。」
+
+Expected:
+- `Proposal mode: no`;
+- normal mockup only;
+- no proposal information band.
+
+## 15. Proposal intent already explicit
+Prompt:
+「請做成提案用的高保真名片 mockup。」
+
+Expected:
+- do not ask the proposal-use question again;
+- infer `Proposal mode: yes` from the explicit request;
+- include the proposal band after the mockup passes QA.
