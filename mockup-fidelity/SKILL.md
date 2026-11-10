@@ -1,11 +1,46 @@
 ---
 name: mockup-fidelity
-description: Create and deliver high-fidelity product and surface mockups from PNG/JPG artwork while treating the original artwork as a locked asset. Use when a user asks to place, replace, apply, preview, or mock up a design on business cards, paper goods, packaging, cups, bottles, posters, signs, screens, apparel, bags, or an existing mockup. Preserve artwork content, aspect ratio and base colors, select realistic substrate/material properties, show a preflight configuration, composite deterministically, automatically verify fidelity, and always surface the finished mockup image to the user.
+description: "Create and deliver high-fidelity product and surface mockups from PNG/JPG artwork while treating the original artwork as a locked asset. Use for business cards, packaging, cups, bottles, posters, signs, screens, apparel, bags, or existing mockups. For every new mockup job, before any image-generation or image-editing tool call, require a per-job output choice: proposal board or pure mockup, unless that same user request explicitly states the choice. Never reuse a previous job's choice. Preserve artwork content, aspect ratio and base colors, composite deterministically, verify fidelity, and surface the finished image."
 ---
 
 # Mockup Fidelity
 
 Create mockups without letting a generative image model redraw the user's artwork.
+
+## First-response output-mode gate — highest priority
+
+Treat **every new mockup request as a new job**.
+
+At the start of each new job, set:
+
+`Output mode: UNRESOLVED`
+
+Never inherit or reuse the proposal/pure-mockup choice from:
+- a previous mockup job;
+- an earlier answer in the conversation;
+- an uploaded reference image;
+- an example shown in this skill.
+
+The choice is resolved only when the **current mockup request itself** explicitly says one of these, or when the user answers the gate question for this job:
+- proposal board / proposal-use / 提案板 / 提案用 / 簡報用 → `proposal`
+- pure mockup / 純 Mockup / 只要 mockup / 不需要提案 → `pure`
+
+If the current job does not already resolve the choice, the assistant's **first response for that job must contain only this question**:
+
+`這次 Mockup 要做哪一種？ A. 提案板（Mockup + 下方提案資訊） B. 純 Mockup`
+
+Hard stop:
+- Do not show preflight yet.
+- Do not call image generation or image editing tools.
+- Do not generate or clean a substrate.
+- Do not render or composite.
+- Do not infer a default.
+- Wait for the user's answer.
+
+Map `A`, `提案板`, `需要`, `提案用` to `proposal`.
+Map `B`, `純 Mockup`, `不需要`, `只要 mockup` to `pure`.
+
+Only after `Output mode` is resolved may the normal preflight and rendering workflow begin.
 
 ## Non-negotiable rules
 
@@ -24,7 +59,7 @@ Create mockups without letting a generative image model redraw the user's artwor
 11. Do not declare the task complete until the finished mockup image itself is visible or attached in the user-facing response. A console message, file path, QA report, or “done” message alone is not delivery.
 12. Success requires all three gates: **Render PASS → Fidelity QA PASS → Delivery PASS**.
 13. Treat border lines, side stripes, trim-adjacent color bands, keylines, and any artwork element close to the cut edge as **content-layer elements**. They must remain visible after mockup unless they are physically occluded by the substrate or explicitly cropped with user authorization.
-14. Before any image generation or image editing begins, establish whether the output is **proposal-use**. If the user has not already explicitly said yes/no, ask exactly one proposal-use question and wait for the answer. Never generate the image before this decision is known.
+14. Before any image generation or image editing begins, resolve the **per-job Output mode** using the highest-priority gate above. Never reuse a prior job's decision, never assume a default, and never call an image tool while the mode is `UNRESOLVED`.
 
 ## Inputs
 
@@ -36,7 +71,7 @@ Accept:
   2. user text description;
   3. automatic detection.
 - Optional fidelity mode: `general` or `high`.
-- Proposal-use decision: `yes` or `no`. This is required before image generation; infer it only when the user explicitly states the output is for a proposal/presentation or explicitly says it is not.
+- Per-job output mode: `proposal` or `pure`. Reset to `UNRESOLVED` for every new mockup request. Resolve from the current request only, or from the user's answer to the mandatory gate question.
 
 Do not require connectors. Do not require Photoshop, Illustrator, Blender, or other local software.
 
@@ -108,20 +143,19 @@ Never include the locked artwork in a generative image-editing prompt. Generate 
 
 ## Proposal-use gate — mandatory before image generation
 
-Before generating or editing any image, establish whether the output needs a proposal presentation layout.
+This section applies after the highest-priority first-response gate.
 
-If the user has **not** already answered this in the same request or prior conversation context, ask exactly:
-
-`這張 Mockup 是否需要做成提案版？（需要／不需要）`
+The proposal decision is **job-scoped**, not conversation-scoped.
 
 Rules:
-1. Ask this before image generation, image editing, substrate generation, or final mockup rendering.
-2. Wait for the answer. Do not begin image generation while the proposal-use decision is unresolved.
-3. If the user already explicitly says `提案用`, `簡報用`, `proposal`, or equivalent, treat it as `yes` and do not ask again.
-4. If the user explicitly says `不用提案`, `只要 mockup`, or equivalent, treat it as `no` and do not ask again.
-5. Record the decision in preflight as `Proposal mode: yes/no`.
+1. Every new mockup job starts with `Output mode: UNRESOLVED`.
+2. Never reuse the last job's answer, even if the previous mockup was proposal mode.
+3. Resolve from the current request only when the user explicitly asks for a proposal board/presentation or explicitly asks for a pure mockup.
+4. Otherwise ask the mandatory A/B question from the first-response gate and wait.
+5. Record the result in preflight as `Output mode: proposal/pure`.
+6. No image-generation/editing tool call is permitted while `Output mode: UNRESOLVED`.
 
-### Proposal mode = yes
+### Output mode = proposal
 
 Read `references/proposal-mode.md`.
 
@@ -154,7 +188,7 @@ Layout rules:
 - The bottom band may use neutral background panels, source-derived brand colors, small swatches, and material samples.
 - Treat proposal copy as presentation content, not part of the locked artwork.
 
-### Proposal mode = no
+### Output mode = pure
 
 Deliver the normal mockup without the proposal information band.
 
@@ -171,7 +205,7 @@ Before modifying or generating any image, show a compact configuration summary. 
 - Placement source: `[selection / description / auto-detected + confidence]`
 - Fit: `[contain / cover]`
 - Edge-adjacent content: `[none detected / detected: preserve full visibility / detected but physically occluded]`
-- Proposal mode: `[yes / no]`
+- Output mode: `[proposal / pure]`
 - Naturalization: presentation layer only
 - Artwork redraw: prohibited
 - Fidelity: `[general / high]`
@@ -216,38 +250,40 @@ Interpret these as `general`: 一般, 快速, 概念稿, preview.
 
 ## Core workflow
 
-1. Inspect inputs and determine whether proposal-use is already explicit.
-2. If proposal-use is unresolved, ask the mandatory proposal-use question and wait for the answer.
-3. Determine rendering mode.
-4. Determine placement using the priority rules.
-5. Inspect the artwork for edge-adjacent content and set an edge-preservation strategy.
-6. If proposal mode is `yes`, read `references/proposal-mode.md` and prepare grounded proposal copy/visual elements before rendering.
-7. Emit the preflight summary, including `Proposal mode`.
-8. Apply conditional-confirmation rules.
-9. Prepare a blank/clean substrate.
+1. Start a new mockup job by resetting `Output mode = UNRESOLVED`.
+2. Inspect only the **current user request** for an explicit output choice.
+3. If unresolved, respond only with the mandatory A/B output-mode question and stop.
+4. After the user answers, set `Output mode = proposal` or `Output mode = pure`.
+5. Determine rendering mode.
+6. Determine placement using the priority rules.
+7. Inspect the artwork for edge-adjacent content and set an edge-preservation strategy.
+8. If `Output mode = proposal`, read `references/proposal-mode.md` and prepare grounded proposal copy/visual elements.
+9. Emit the preflight summary, including `Output mode`.
+10. Apply conditional-confirmation rules.
+11. Prepare a blank/clean substrate.
    - For Mode 2A, use image editing only to remove the existing design from the target area.
    - If an edit changes unrelated areas materially, reject it and retry.
-10. Composite the locked artwork using deterministic processing.
+12. Composite the locked artwork using deterministic processing.
    - Prefer `scripts/render_mockup.py`.
    - Use `contain` by default.
    - Use `cover` only with explicit user authorization.
    - Use only presentation-layer luminance modulation for material integration.
-11. Run `scripts/verify_mockup.py`.
-12. Perform final visual inspection of the rendered mockup.
-13. If verification fails, retry within the fidelity-mode budget.
-14. If proposal mode is `yes`, compose the bottom proposal information band **after** the core mockup passes fidelity QA. Do not modify the locked artwork layer while adding the presentation band.
-15. Verify proposal layout:
+13. Run `scripts/verify_mockup.py`.
+14. Perform final visual inspection of the rendered mockup.
+15. If verification fails, retry within the fidelity-mode budget.
+16. If `Output mode = proposal`, compose the bottom proposal information band **after** the core mockup passes fidelity QA. Do not modify the locked artwork layer while adding the presentation band.
+17. Verify proposal layout:
    - all three sections are present;
    - copy is grounded in source/user information;
    - brand visuals are source-derived;
    - material recommendation is plausible;
    - band does not cover or crop the mockup.
-16. If verification still fails, stop and report:
-    - failed check;
-    - probable cause;
-    - recommended fix or fallback.
-17. Run the **Delivery Gate** below.
-18. Deliver only a passing result, or clearly label a non-passing result as failed instead of presenting it as successful.
+18. If verification still fails, stop and report:
+   - failed check;
+   - probable cause;
+   - recommended fix or fallback.
+19. Run the **Delivery Gate** below.
+20. Deliver only a passing result, or clearly label a non-passing result as failed instead of presenting it as successful.
 
 ## Delivery Gate — mandatory
 
