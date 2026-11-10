@@ -273,6 +273,56 @@ Fail examples:
 - `DLV-03`
 - `FLW-04`
 
+### R17 — Proposal-use gate before generation
+Priority: **P0**
+
+Input:
+- any valid artwork + mockup request with no proposal-use decision.
+
+Expected:
+- ask `這張 Mockup 是否需要做成提案版？（需要／不需要）` before any image generation/editing;
+- wait for the answer;
+- record the result in preflight.
+
+Fail examples:
+- `PRP-01`
+- `FLW-03`
+
+### R18 — Proposal board three-section layout
+Priority: **P0**
+
+Input:
+- proposal mode = yes.
+
+Expected:
+- core mockup passes fidelity QA before proposal composition;
+- bottom band appears beneath the mockup;
+- required sections: `設計概念`, `品牌元素`, `材質建議`;
+- no unsupported copy;
+- brand visuals remain source-derived;
+- proposal band does not cover/crop the mockup.
+
+Fail examples:
+- `PRP-02`
+- `PRP-03`
+- `PRP-04`
+- `PRP-05`
+- `PRP-06`
+
+### R19 — Proposal declined
+Priority: **P1**
+
+Input:
+- proposal mode = no.
+
+Expected:
+- normal mockup only;
+- proposal information band does not appear.
+
+Fail examples:
+- `PRP-02`
+- `FLW-02`
+
 ## Run cadence
 
 Run the full suite:
@@ -280,7 +330,8 @@ Run the full suite:
 - after changing fit/crop/perspective behavior;
 - after changing material/naturalization rules;
 - after changing fallback or confirmation logic;
-- after changing QA/delivery rules.
+- after changing QA/delivery rules;
+- after changing proposal-mode question, content, or layout rules.
 
 For a narrow change, run the impacted P0/P1 cases first, then run all P0 cases before packaging.
 
