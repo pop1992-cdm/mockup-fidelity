@@ -67,6 +67,16 @@ Default severity: S1 for OCC-02; S2 for others.
 
 Default severity: S0 for FLW-01/04/06; S1 for FLW-02/03/05.
 
+### PROPOSAL
+- `PRP-01 proposal-question-skipped` — image generation/editing started before proposal-use was explicitly resolved.
+- `PRP-02 proposal-panel-missing` — user chose proposal mode but the final presentation board lacks the required bottom information band.
+- `PRP-03 unsupported-proposal-copy` — proposal copy invents unsupported strategy, history, symbolism, or claims.
+- `PRP-04 brand-element-invented` — proposal panel redraws/replaces the source brand mark or invents a new brand element without authorization.
+- `PRP-05 proposal-layout-obscures-mockup` — proposal band covers/crops/competes with the mockup instead of sitting beneath it.
+- `PRP-06 material-recommendation-missing` — proposal mode lacks a practical material/stock/finish recommendation.
+
+Default severity: S0 for PRP-01; S1 for PRP-02/03/04/05/06.
+
 ### DELIVERY
 - `DLV-01 image-not-surfaced` — render exists but user cannot see/access final image.
 - `DLV-02 wrong-file-delivered` — intermediate or failed render delivered as final.
@@ -98,4 +108,5 @@ If multiple failures occur, list the highest-severity code first.
 - `MAT-*` → change substrate/material treatment only.
 - `OCC-*` → change scene composition/viewpoint/overlap.
 - `FLW-*` → stop; correct workflow before rendering again.
+- `PRP-*` → stop proposal composition; resolve proposal decision/content/layout without altering the already-passing mockup.
 - `DLV-*` → retry delivery; do not re-render unless image itself failed.
