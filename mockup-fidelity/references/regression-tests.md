@@ -323,6 +323,23 @@ Fail examples:
 - `PRP-02`
 - `FLW-02`
 
+### R20 — Per-job output mode reset
+Priority: **P0**
+
+Scenario:
+1. Job 1: user chooses proposal board and receives a proposal output.
+2. Job 2: user starts a new mockup request without specifying proposal/pure mode.
+
+Expected:
+- Job 2 resets to `Output mode: UNRESOLVED`;
+- the previous job's proposal choice is not reused;
+- the first response for Job 2 is only the mandatory A/B question;
+- no preflight or image tool call occurs before the new answer.
+
+Fail examples:
+- `PRP-01`
+- `PRP-07`
+
 ## Run cadence
 
 Run the full suite:
