@@ -1,6 +1,6 @@
 ---
 name: mockup-fidelity
-description: "Create and deliver high-fidelity product and surface mockups from PNG/JPG artwork while treating the original artwork as a locked asset. Use for business cards, packaging, cups, bottles, posters, signs, screens, apparel, bags, or existing mockups. For every new mockup job, before any image-generation or image-editing tool call, require a per-job output choice: proposal board or pure mockup, unless that same user request explicitly states the choice. Never reuse a previous job's choice. Preserve artwork content, aspect ratio and base colors, composite deterministically, verify fidelity, and surface the finished image."
+description: "Create and deliver high-fidelity product and surface mockups from PNG/JPG artwork while treating the original artwork as a locked asset. ALWAYS use this skill when the user says mockup, mock-up, 幫我 mockup, 幫我做 mockup, 做名片 mockup, 名片 mockup, 包裝 mockup, product mockup, mockup this design, place this design on a product, replace artwork on a mockup, or asks to preview artwork on business cards, packaging, cups, bottles, posters, signs, screens, apparel, or bags. For every new mockup job, require a per-job choice between proposal board and pure mockup before any image generation/editing unless the same request already states the choice. Never reuse a previous job's choice. Preserve artwork content, aspect ratio and base colors, composite deterministically, verify fidelity, and surface the finished image."
 ---
 
 # Mockup Fidelity
