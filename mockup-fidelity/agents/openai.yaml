@@ -1,3 +1,3 @@
 interface:
   display_name: "Mockup Fidelity"
-  short_description: "Create mockups while locking original artwork."
+  short_description: "High-fidelity mockups; triggers on mockup requests."
